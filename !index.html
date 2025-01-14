@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recargas CANTV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .popup {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            max-width: 300px;
+            width: 100%;
+        }
+        .popup h1 {
+            margin-top: 0;
+            font-size: 24px;
+            background-color: #ED7318;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .popup img {
+            width: 100px;
+            margin-top: 10px;
+        }
+        .popup input[type="number"], .popup input[type="text"], .popup input[type="email"] {
+            padding: 10px;
+            font-size: 16px;
+            width: calc(100% - 20px);
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .popup button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="popup">
+        <h1>RECARGAS CANTV</h1>
+        <img src="https://seeklogo.com/images/C/CANTV_2007-logo-C314D6023D-seeklogo.com.png" alt="Logo CANTV">
+        <p>Ingrese su cédula:</p>
+        <input type="text" id="cedula" placeholder="Cédula de identidad" oninput="guardarDatos()">
+        <p>Ingrese su correo electrónico:</p>
+        <input type="email" id="correo" placeholder="Correo electrónico" oninput="guardarDatos()">
+        <p>Ingrese el número de teléfono a recargar:</p>
+        <input type="text" id="telefono" placeholder="Número de teléfono" oninput="validarTelefono()">
+        <p>Ingrese el monto en Bolívares:</p>
+        <input type="number" id="monto" min="5" step="0.01" placeholder="Monto en Bs" oninput="actualizarRecarga()">
+        <div class="result" id="resultado"></div>
+        <button id="procesarButton" onclick="procesarRecarga()" style="display:none;">Procesar Recarga</button>
+    </div>
+
+    <script>
+        let recargaConInteres = 0;
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            cargarDatos();
+        });
+
+        function guardarDatos() {
+            const cedula = document.getElementById('cedula').value;
+            const correo = document.getElementById('correo').value;
+            localStorage.setItem('cedula', cedula);
+            localStorage.setItem('correo', correo);
+        }
+
+        function cargarDatos() {
+            const cedula = localStorage.getItem('cedula');
+            const correo = localStorage.getItem('correo');
+            if (cedula) {
+                document.getElementById('cedula').value = cedula;
+            }
+            if (correo) {
+                document.getElementById('correo').value = correo;
+            }
+        }
+
+        function validarTelefono() {
+            let telefono = document.getElementById('telefono').value;
+            const regex = /^02\d{9}$/;
+            if (!regex.test(telefono)) {
+                document.getElementById('resultado').innerText = 'El número de teléfono debe tener 11 dígitos y comenzar con 02.';
+                document.getElementById('procesarButton').style.display = 'none';
+                return false;
+            }
+            document.getElementById('resultado').innerText = '';
+            return true;
+        }
+
+        function actualizarRecarga() {
+            if (!validarTelefono()) return;
+
+            let montoIngresado = parseFloat(document.getElementById('monto').value);
+            if (isNaN(montoIngresado) || montoIngresado < 5) {
+                document.getElementById('resultado').innerText = 'El monto debe ser un número mayor o igual a 5 Bs.';
+                document.getElementById('procesarButton').style.display = 'none';
+                return;
+            }
+
+            recargaConInteres = montoIngresado + (montoIngresado * 0.01);
+            document.getElementById('resultado').innerText = `Monto a recargar más el 1%: ${recargaConInteres.toFixed(2)} Bs`;
+            document.getElementById('procesarButton').style.display = 'inline-block';
+        }
+
+        function procesarRecarga() {
+            let telefono = document.getElementById('telefono').value;
+            let montoIngresado = parseFloat(document.getElementById('monto').value);
+            let cedula = document.getElementById('cedula').value;
+            let correo = document.getElementById('correo').value;
+
+            const mensaje = `SOLICITUD DE RECARGA\nCédula: ${cedula}\nCorreo: ${correo}\nNúmero: ${telefono}\nMonto ingresado: ${montoIngresado.toFixed(2)} Bs\nMonto con 1% de interés: ${recargaConInteres.toFixed(2)} Bs\nEL MONTO SERA DEBITADO DE SU CUENTA VENDE Y GANA\n\nAprobación: ✅`;
+            const url = `https://wa.me/584147397648?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
